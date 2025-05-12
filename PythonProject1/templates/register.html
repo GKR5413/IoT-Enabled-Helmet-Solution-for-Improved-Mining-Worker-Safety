@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Register</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.2.3/css/bootstrap.min.css" />
+    <style>
+        body {
+            background: linear-gradient(to right, #e0f7fa, #ffffff);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        .card {
+            border: none;
+            border-radius: 1rem;
+            box-shadow: 0 0.75rem 2rem rgba(0, 0, 0, 0.1);
+        }
+        .card-header {
+            background-color: #009688;
+            color: white;
+            border-radius: 1rem 1rem 0 0;
+            padding: 1.5rem;
+            text-align: center;
+        }
+        .card-body {
+            padding: 2rem;
+        }
+        .card-title {
+            font-weight: 600;
+        }
+        .btn-custom {
+            background-color: #00796b;
+            color: white;
+            border: none;
+        }
+        .btn-custom:hover {
+            background-color: #004d40;
+        }
+        .form-label {
+            color: #455a64;
+        }
+        .alert-danger {
+            background-color: #ffcdd2;
+            color: #b71c1c;
+        }
+        a.text-link {
+            color: #00796b;
+            text-decoration: none;
+        }
+        a.text-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="col-md-6 col-lg-5">
+        <div class="card">
+            <div class="card-header">
+                <h2>Sensor Data Portal</h2>
+            </div>
+            <div class="card-body">
+                <h4 class="card-title text-center text-teal mb-4">Create Your Account</h4>
+
+                {% if message %}
+                <div class="alert alert-danger text-center">{{ message }}</div>
+                {% endif %}
+
+                <form method="POST" action="{{ url_for('register') }}">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="username" name="username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="password" name="password" required>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-custom">Register</button>
+                    </div>
+                </form>
+
+                <div class="text-center mt-3">
+                    <p class="text-muted">Already have an account?
+                        <a href="{{ url_for('login') }}" class="text-link">Login here</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.2.3/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>ESP32 Environment Monitor</title>
+</head>
+<body>
+  <h1>Live Sensor Readings</h1>
+  <p><strong>Temperature:</strong> <span id="temp">--</span> °C</p>
+  <p><strong>Humidity:</strong> <span id="hum">--</span> %</p>
+  <p><strong>Gas Level:</strong> <span id="gas">--</span></p>
+  <p><strong>Last Updated:</strong> <span id="time">--</span></p>
+
+  <script>
+    async function fetchData() {
+      const res = await fetch('http://localhost:5000/api/data');
+      const data = await res.json();
+      document.getElementById('temp').textContent = data.temperature || '--';
+      document.getElementById('hum').textContent = data.humidity || '--';
+      document.getElementById('gas').textContent = data.gas || '--';
+      document.getElementById('time').textContent = data.timestamp || '--';
+    }
+    setInterval(fetchData, 2000);
+    fetchData(); // Initial load
+  </script>
+</body>
+</html>

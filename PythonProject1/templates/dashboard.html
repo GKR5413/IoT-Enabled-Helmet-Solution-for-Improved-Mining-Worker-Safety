@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sensor Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { background-color: #f8f9fa; }
+    .card {
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    .card-header { font-weight: bold; }
+    .sensor-value { font-size: 2rem; font-weight: bold; }
+    .sensor-unit { font-size: 1rem; color: #6c757d; }
+    .status-icon { font-size: 2rem; margin-right: 10px; }
+    .chart-container { height: 400px;
+    width: 100%; }
+    .alert-indicator { width: 15px; height: 15px; border-radius: 50%; display: inline-block; margin-left: 10px; }
+    .alert-active { background-color: #dc3545; animation: blink 1s infinite; }
+    .alert-inactive { background-color: #28a745; }
+    @keyframes blink { 0% {opacity: 1;} 50% {opacity: 0.4;} 100% {opacity: 1;} }
+    .alert-status { text-align: center; font-weight: bold; margin-top: 5px; }
+    .status-active { color: #dc3545; }
+    .status-inactive { color: #28a745; }
+  </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+  <div class="container">
+    <a class="navbar-brand" href="#">Sensor Dashboard</a>
+    <div class="navbar-nav ms-auto">
+      <span class="nav-item nav-link text-white">Welcome, {{ username }}</span>
+      <a class="nav-item nav-link" href="{{ url_for('logout') }}">Logout</a>
+    </div>
+  </div>
+</nav>
+
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Environmental Monitoring System</h2>
+    <div>
+      <span class="text-muted" id="lastUpdated">Last updated: {{ sensor_data.timestamp if sensor_data.timestamp else 'Never' }}</span>
+      <button class="btn btn-outline-primary btn-sm ms-2" id="refreshBtn"><i class="fas fa-sync-alt"></i> Refresh</button>
+    </div>
+  </div>
+
+  <!-- Sensor Cards -->
+  <div class="row mb-4">
+    <div class="col-lg-3 col-md-6">
+      <div class="card">
+        <div class="card-header bg-info text-white"><i class="fas fa-temperature-high"></i> Temperature</div>
+        <div class="card-body d-flex align-items-center">
+          <i class="fas fa-thermometer-half status-icon text-info"></i>
+          <div><span class="sensor-value" id="tempValue">{{ sensor_data.temperature if sensor_data.temperature is not none else '--' }}</span><span class="sensor-unit">°C</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+      <div class="card">
+        <div class="card-header bg-primary text-white"><i class="fas fa-tint"></i> Humidity</div>
+        <div class="card-body d-flex align-items-center">
+          <i class="fas fa-water status-icon text-primary"></i>
+          <div><span class="sensor-value" id="humidityValue">{{ sensor_data.humidity if sensor_data.humidity is not none else '--' }}</span><span class="sensor-unit">%</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+      <div class="card">
+        <div class="card-header bg-warning text-white"><i class="fas fa-wind"></i> Gas</div>
+        <div class="card-body d-flex align-items-center">
+          <i class="fas fa-smog status-icon text-warning"></i>
+          <div><span class="sensor-value" id="gasValue">{{ sensor_data.gas if sensor_data.gas is not none else '--' }}</span><span class="sensor-unit">ppm</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+      <div class="card">
+        <div class="card-header bg-success text-white"><i class="fas fa-wifi"></i> BLE</div>
+        <div class="card-body d-flex justify-content-between">
+          <div class="text-center"><i class="fas fa-signal text-success"></i><div>RSSI</div><span class="sensor-value">{{ sensor_data.rssi if sensor_data.rssi is not none else '--' }}</span><span class="sensor-unit">dBm</span></div>
+          <div class="text-center"><i class="fas fa-ruler text-success"></i><div>Distance</div><span class="sensor-value">{{ sensor_data.distance if sensor_data.distance is not none else '--' }}</span><span class="sensor-unit">m</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Status Monitor -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header bg-danger text-white"><i class="fas fa-exclamation-triangle"></i> Status Monitor</div>
+        <div class="card-body d-flex justify-content-around">
+          <div class="text-center">
+            <i class="fas fa-bell" id="buttonIcon" style="color: {{ 'red' if sensor_data.button_pressed else 'gray' }}"></i>
+            <div>Button</div>
+            <div class="alert-indicator {{ 'alert-active' if sensor_data.button_pressed else 'alert-inactive' }}" id="buttonIndicator"></div>
+            <div class="alert-status" id="buttonStatus">
+              <span class="{{ 'status-active' if sensor_data.button_pressed else 'status-inactive' }}">
+                {{ 'ALERT' if sensor_data.button_pressed else 'Normal' }}
+              </span>
+            </div>
+          </div>
+          <div class="text-center">
+            <i class="fas fa-volume-up" id="buzzerIcon" style="color: {{ 'red' if sensor_data.buzzer_active else 'gray' }}"></i>
+            <div>Buzzer</div>
+            <div class="alert-indicator {{ 'alert-active' if sensor_data.buzzer_active else 'alert-inactive' }}" id="buzzerIndicator"></div>
+            <div class="alert-status" id="buzzerStatus">
+              <span class="{{ 'status-active' if sensor_data.buzzer_active else 'status-inactive' }}">
+                {{ 'ACTIVE' if sensor_data.buzzer_active else 'Inactive' }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Historical Chart -->
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+          <span><i class="fas fa-chart-line"></i> Historical Data</span>
+          <div>
+            <button class="btn btn-sm btn-outline-light" onclick="fetchData('hour')">Last Hour</button>
+            <button class="btn btn-sm btn-outline-light" onclick="fetchData('day')">Last Day</button>
+            <button class="btn btn-sm btn-outline-light" onclick="fetchData('week')">Last Week</button>
+          </div>
+        </div>
+        <div class="card-body chart-container">
+          <canvas id="sensorChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- JS -->
+<script>
+let chart;
+function updateChart(data) {
+  const labels = data.map(e => e.timestamp);
+  const temp = data.map(e => e.temperature);
+  const hum = data.map(e => e.humidity);
+  const gas = data.map(e => e.gas);
+
+  const ctx = document.getElementById('sensorChart').getContext('2d');
+  if (chart) chart.destroy();
+  chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Temp (°C)', data: temp, borderColor: 'blue', yAxisID: 'y' },
+        { label: 'Humidity (%)', data: hum, borderColor: 'green', yAxisID: 'y' },
+        { label: 'Gas (ppm)', data: gas, borderColor: 'orange', yAxisID: 'y1' }
+      ]
+    },
+    options: {
+      responsive: true,
+      interaction: { mode: 'index', intersect: false },
+      stacked: false,
+      scales: {
+        y: { type: 'linear', position: 'left', title: { display: true, text: 'Temp / Humidity' } },
+        y1: { type: 'linear', position: 'right', title: { display: true, text: 'Gas' }, grid: { drawOnChartArea: false } }
+      }
+    }
+  });
+}
+function fetchData(range = 'day') {
+  fetch(`/api/data?range=${range}`)
+    .then(r => r.json())
+    .then(data => updateChart(data.reverse()))
+    .catch(console.error);
+}
+function fetchLatestReading() {
+  fetch('/api/latest')
+    .then(r => r.json())
+    .then(updateCurrentValues)
+    .catch(console.error);
+}
+function updateCurrentValues(data) {
+  document.getElementById('tempValue').textContent = data.temperature;
+  document.getElementById('humidityValue').textContent = data.humidity;
+  document.getElementById('gasValue').textContent = data.gas;
+  document.getElementById('lastUpdated').textContent = 'Last updated: ' + data.timestamp;
+
+  const bell = document.getElementById('buttonIcon');
+  const bInd = document.getElementById('buttonIndicator');
+  const bStat = document.getElementById('buttonStatus').querySelector('span');
+  bell.style.color = data.button_pressed ? 'red' : 'gray';
+  bInd.className = data.button_pressed ? 'alert-indicator alert-active' : 'alert-indicator alert-inactive';
+  bStat.textContent = data.button_pressed ? 'ALERT' : 'Normal';
+  bStat.className = data.button_pressed ? 'status-active' : 'status-inactive';
+
+  const buzz = document.getElementById('buzzerIcon');
+  const buzzInd = document.getElementById('buzzerIndicator');
+  const buzzStat = document.getElementById('buzzerStatus').querySelector('span');
+  buzz.style.color = data.buzzer_active ? 'red' : 'gray';
+  buzzInd.className = data.buzzer_active ? 'alert-indicator alert-active' : 'alert-indicator alert-inactive';
+  buzzStat.textContent = data.buzzer_active ? 'ACTIVE' : 'Inactive';
+  buzzStat.className = data.buzzer_active ? 'status-active' : 'status-inactive';
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  fetchData();
+  fetchLatestReading();
+
+  document.getElementById('refreshBtn').addEventListener('click', function () {
+    const btn = this;
+    const icon = btn.querySelector('i');
+    btn.disabled = true;
+    icon.classList.add('fa-spin');
+    Promise.all([fetchData(), fetchLatestReading()]).then(() => {
+      setTimeout(() => {
+        btn.disabled = false;
+        icon.classList.remove('fa-spin');
+      }, 500);
+    });
+  });
+
+  setInterval(fetchLatestReading, 30000); // Auto-refresh every 30s
+});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

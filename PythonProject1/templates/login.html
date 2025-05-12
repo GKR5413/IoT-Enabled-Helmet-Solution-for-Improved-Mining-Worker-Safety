@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.2.3/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #121212;
+            color: #e0e0e0;
+        }
+        .card {
+            background-color: #1f1f1f;
+            border-color: #2c2c2c;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.25);
+        }
+        .card-header {
+            background-color: #212529;
+            border-bottom: 1px solid #2c2c2c;
+        }
+        .btn-primary {
+            background-color: #0d6efd;
+            border-color: #0d6efd;
+        }
+        .btn-primary:hover {
+            background-color: #0b5ed7;
+            border-color: #0a58ca;
+        }
+        .form-control {
+            background-color: #2c2c2c;
+            border: 1px solid #444;
+            color: #e0e0e0;
+        }
+        .form-control::placeholder {
+            color: #999;
+        }
+        .form-label {
+            color: #b0b0b0;
+        }
+        .alert-danger {
+            background-color: #721c24;
+            border-color: #f5c6cb;
+            color: #f8d7da;
+        }
+        a.text-primary {
+            color: #66b2ff !important;
+        }
+        a.text-primary:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header text-white text-center">
+                        <h2>Sensor Data Portal</h2>
+                    </div>
+                    <div class="card-body">
+                        <h3 class="card-title text-center mb-4 text-secondary">Login</h3>
+
+                        {% if message %}
+                        <div class="alert alert-danger">{{ message }}</div>
+                        {% endif %}
+
+                        <form method="POST" action="{{ url_for('login') }}">
+                            <div class="mb-3">
+                                <label for="username" class="form-label">Username</label>
+                                <input type="text" class="form-control" id="username" name="username" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Password</label>
+                                <input type="password" class="form-control" id="password" name="password" required>
+                            </div>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary">Login</button>
+                            </div>
+                        </form>
+
+                        <div class="text-center mt-3">
+                            <p>Don't have an account? <a href="{{ url_for('register') }}" class="text-primary">Register here</a></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.2.3/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
